@@ -5,3 +5,13 @@ netty:
   default:
     allocator:
       max-order: 3
+datasources:
+  default:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PWD}
+    driverClassName: org.postgresql.Driver
+jooq:
+  datasources:
+    default:
+      sql-dialect: 'POSTGRES'

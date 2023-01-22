@@ -15,22 +15,40 @@ repositories {
 }
 
 dependencies {
+    //micronaut
     kapt("io.micronaut:micronaut-http-validation")
-    kapt("io.micronaut.openapi:micronaut-openapi")
-    kapt("io.micronaut.security:micronaut-security-annotations")
-    implementation("io.micronaut:micronaut-http-client")
-    implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
-    implementation("io.micronaut.security:micronaut-security")
-    implementation("io.swagger.core.v3:swagger-annotations")
     implementation("jakarta.annotation:jakarta.annotation-api")
-    runtimeOnly("ch.qos.logback:logback-classic")
+
+    //api
+    kapt("io.micronaut.openapi:micronaut-openapi")
+    implementation("io.swagger.core.v3:swagger-annotations")
     implementation("io.micronaut:micronaut-validation")
 
-    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    //security
+    kapt("io.micronaut.security:micronaut-security-annotations")
+    implementation("io.micronaut.security:micronaut-security")
 
+    //json
+    implementation("io.micronaut.serde:micronaut-serde-jackson:1.5.0")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor:1.5.0")
+
+    //logging
+    runtimeOnly("ch.qos.logback:logback-classic")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+
+    //database
+    implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    runtimeOnly("org.postgresql:postgresql:42.5.1")
+    implementation("io.micronaut.sql:micronaut-jooq")
 }
 
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("io.micronaut:micronaut-jackson-databind"))
+            .using(module("io.micronaut.serde:micronaut-serde-jackson:1.5.0"))
+    }
+}
 
 application {
     mainClass.set("home.dj.ApplicationKt")
@@ -51,7 +69,7 @@ tasks {
         }
     }
 }
-graalvmNative.toolchainDetection.set(false)
+
 micronaut {
     runtime("netty")
     testRuntime("kotest")
