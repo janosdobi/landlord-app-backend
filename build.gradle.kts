@@ -21,7 +21,7 @@ try {
 version = "0.1"
 group = "home.dj"
 
-val kotlinVersion = project.properties.get("kotlinVersion")
+val kotlinVersion = project.properties["kotlinVersion"]
 repositories {
     mavenCentral()
 }

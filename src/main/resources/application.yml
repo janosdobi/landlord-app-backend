@@ -1,6 +1,9 @@
 micronaut:
   application:
     name: landlordAppBackend
+  server:
+    port: 8091
+    context-path: /api
 netty:
   default:
     allocator:
@@ -11,6 +14,7 @@ datasources:
     username: ${DB_USER}
     password: ${DB_PWD}
     driverClassName: org.postgresql.Driver
+    maximum-pool-size: 10
 jooq:
   datasources:
     default:
