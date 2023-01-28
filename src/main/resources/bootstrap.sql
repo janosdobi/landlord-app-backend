@@ -1,13 +1,38 @@
-CREATE TYPE landlord_app.user_type AS ENUM ('TENANT', 'LANDLORD');
+CREATE TYPE landlord_app.user_role AS ENUM ('TENANT', 'LANDLORD', 'ADMIN');
 
 CREATE TABLE landlord_app.users
 (
     id         serial PRIMARY KEY,
     name       VARCHAR(50) UNIQUE NOT NULL,
-    type       user_type          not null,
     created_at TIMESTAMP          NOT NULL,
     updated_at TIMESTAMP          not NULL,
     created_by VARCHAR(50)        not NULL
+);
+
+CREATE UNIQUE INDEX users_name_idx ON landlord_app.users ("name");
+
+CREATE TABLE landlord_app.user_roles
+(
+    id         serial PRIMARY KEY,
+    role_name  user_role   not null,
+    user_id    INT         not null,
+    FOREIGN KEY (user_id)
+        REFERENCES users (id),
+    created_at TIMESTAMP   NOT NULL,
+    updated_at TIMESTAMP   not NULL,
+    created_by VARCHAR(50) not NULL
+);
+
+CREATE TABLE landlord_app.user_credentials
+(
+    id         serial PRIMARY KEY,
+    credential VARCHAR     not null,
+    user_id    INT         not null,
+    FOREIGN KEY (user_id)
+        REFERENCES users (id),
+    created_at TIMESTAMP   NOT NULL,
+    updated_at TIMESTAMP   not NULL,
+    created_by VARCHAR(50) not NULL
 );
 
 CREATE TABLE landlord_app.agreements
