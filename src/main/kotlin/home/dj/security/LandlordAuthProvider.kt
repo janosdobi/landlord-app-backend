@@ -24,7 +24,10 @@ class LandlordAuthProvider(
         mono {
             (authenticationRequest as? UsernamePasswordCredentials)?.let {
                 if (hasher.calculateHash(authenticationRequest.secret) == dbService.getCredentialForUser(it.identity)) {
-                    AuthenticationResponse.success(authenticationRequest.identity as String)
+                    AuthenticationResponse.success(
+                        it.identity,
+                        dbService.getUserRoles(it.identity).map { role -> role.name }
+                    )
                 } else {
                     throw AuthenticationResponse.exception()
                 }
