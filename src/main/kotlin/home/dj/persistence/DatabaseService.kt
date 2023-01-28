@@ -18,25 +18,28 @@ import home.dj.domain.UserRole as InternalUserRole
 class DatabaseService(
     private val context: DSLContext
 ) {
-    suspend fun getCredentialForUser(userName: String): String? =
+    suspend fun getCredentialAndIdForUser(userName: String): Pair<String, Int> =
         withContext(Dispatchers.IO) {
             context.select(
-                UserCredentials.USER_CREDENTIALS.CREDENTIAL
+                UserCredentials.USER_CREDENTIALS.CREDENTIAL,
+                Users.USERS.ID
             )
                 .from(USERS)
                 .join(USER_CREDENTIALS).on(USER_CREDENTIALS.USER_ID.eq(USERS.ID))
                 .where(Users.USERS.NAME.eq(userName))
-                .fetchOne()?.let { it.get(UserCredentials.USER_CREDENTIALS.CREDENTIAL)!! }
+                .fetchOne()
+                ?.let {
+                    it[UserCredentials.USER_CREDENTIALS.CREDENTIAL]!! to it[Users.USERS.ID]!!
+                } ?: ("" to -1)
         }
 
-    suspend fun getUserRoles(userName: String): List<InternalUserRole> =
+    suspend fun getUserRoles(uid: Int): List<InternalUserRole> =
         withContext(Dispatchers.IO) {
             context.select(
                 UserRoles.USER_ROLES.ROLE_NAME
             )
-                .from(USERS)
-                .join(USER_ROLES).on(USER_ROLES.USER_ID.eq(USERS.ID))
-                .where(Users.USERS.NAME.eq(userName))
+                .from(USER_ROLES)
+                .where(USER_ROLES.USER_ID.eq(uid))
                 .fetch().map { InternalUserRole.valueOf(it[UserRoles.USER_ROLES.ROLE_NAME]?.name ?: "") }
         }
 }

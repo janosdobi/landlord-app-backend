@@ -16,7 +16,6 @@ class MainController(
 ) {
     private val logger = KotlinLogging.logger {}
 
-
     @Get("/test")
     suspend fun getMe(principal: Principal): HttpResponse<String> {
         return HttpResponse.ok("success")

@@ -23,10 +23,12 @@ class LandlordAuthProvider(
     ): Publisher<AuthenticationResponse> =
         mono {
             (authenticationRequest as? UsernamePasswordCredentials)?.let {
-                if (hasher.calculateHash(authenticationRequest.secret) == dbService.getCredentialForUser(it.identity)) {
+                val (credential, userId) = dbService.getCredentialAndIdForUser(it.identity)
+                if (hasher.calculateHash(authenticationRequest.secret) == credential) {
                     AuthenticationResponse.success(
                         it.identity,
-                        dbService.getUserRoles(it.identity).map { role -> role.name }
+                        dbService.getUserRoles(userId).map { role -> role.name },
+                        mapOf("uid" to userId)
                     )
                 } else {
                     throw AuthenticationResponse.exception()
