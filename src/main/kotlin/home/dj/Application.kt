@@ -1,8 +1,8 @@
 package home.dj
 
-import io.micronaut.runtime.Micronaut.run
-import io.swagger.v3.oas.annotations.*
-import io.swagger.v3.oas.annotations.info.*
+import io.micronaut.runtime.Micronaut
+import io.swagger.v3.oas.annotations.OpenAPIDefinition
+import io.swagger.v3.oas.annotations.info.Info
 
 @OpenAPIDefinition(
     info = Info(
@@ -14,6 +14,10 @@ object Api {
 }
 
 fun main(args: Array<String>) {
-    run(*args)
+    Micronaut.build()
+        .args(*args)
+        .banner(false)
+        .environments("local")
+        .start()
 }
 
