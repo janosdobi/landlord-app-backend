@@ -10,6 +10,14 @@ plugins {
     id("nu.studer.jooq") version "5.2.1"
 }
 
+allOpen {
+    annotations(
+        "io.micronaut.aop.Around",
+        "io.micronaut.http.annotation.Controller",
+        "jakarta.inject.Singleton"
+    )
+}
+
 val jooqPropertiesFile = rootProject.file("jooq.properties")
 val jooqProperties = Properties()
 try {
