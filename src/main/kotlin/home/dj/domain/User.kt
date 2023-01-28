@@ -11,11 +11,11 @@ data class User(
     val id: Long,
     @field:Size(min = 1)
     val name: String,
-    val type: UserType,
+    val roles: List<UserRole>,
     val agreement: Agreement
 )
 
 @Serdeable
-enum class UserType {
-    TENANT, LANDLORD
+enum class UserRole {
+    TENANT, LANDLORD, ADMIN
 }
