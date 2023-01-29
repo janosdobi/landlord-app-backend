@@ -2,10 +2,7 @@ package home.dj.persistence
 
 import home.dj.domain.*
 import home.dj.jooq.model.enums.CostCategory
-import home.dj.jooq.model.tables.Agreements
-import home.dj.jooq.model.tables.UserCredentials
-import home.dj.jooq.model.tables.UserRoles
-import home.dj.jooq.model.tables.Users
+import home.dj.jooq.model.tables.*
 import home.dj.jooq.model.tables.references.*
 import io.micronaut.context.annotation.Context
 import io.micronaut.context.annotation.Requires
@@ -13,9 +10,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import javax.persistence.NoResultException
+import home.dj.domain.CostCategory as InternalCostCategory
 import home.dj.domain.UserRole as InternalUserRole
 
 @Context
@@ -48,7 +47,7 @@ class DatabaseService(
                 .fetch().map { InternalUserRole.valueOf(it[UserRoles.USER_ROLES.ROLE_NAME]?.name ?: "") }
         }
 
-    suspend fun fetchAgreementForLandlord(agreementId: Int, uid: Int): Agreement =
+    suspend fun fetchAgreementForUser(agreementId: Int, uid: Int, role: InternalUserRole): Agreement =
         withContext(Dispatchers.IO) {
             context.select(
                 Agreements.AGREEMENTS.LANDLORD_ID,
@@ -65,7 +64,11 @@ class DatabaseService(
             )
                 .from(AGREEMENTS)
                 .where(Agreements.AGREEMENTS.ID.eq(agreementId))
-                .and(Agreements.AGREEMENTS.LANDLORD_ID.eq(uid))
+                .and(
+                    if (role == InternalUserRole.LANDLORD) Agreements.AGREEMENTS.LANDLORD_ID.eq(uid) else Agreements.AGREEMENTS.TENANT_ID.eq(
+                        uid
+                    )
+                )
                 .fetchOne()?.let {
                     Agreement(
                         id = it[Agreements.AGREEMENTS.ID]!!.toLong(),
@@ -106,7 +109,7 @@ class DatabaseService(
                                 COSTS.CREATED_BY
                             )
                             .values(
-                                dailyCost.agreement.id.toInt(),
+                                dailyCost.agreementId,
                                 BigDecimal.valueOf(dailyCost.amount),
                                 CostCategory.valueOf(dailyCost.costCategory.name),
                                 dailyCost.date.atStartOfDay(),
@@ -143,6 +146,28 @@ class DatabaseService(
                         userName
                     ).execute()
             }
+        }
+    }
+
+    suspend fun getCostsForPeriod(startDate: LocalDate, endDate: LocalDate, agreementId: Int): List<DailyCost> {
+        return withContext(Dispatchers.IO) {
+            context.select(
+                Costs.COSTS.AMOUNT,
+                Costs.COSTS.COST_CATEGORY,
+                Costs.COSTS.COST_DATE,
+                Costs.COSTS.AGREEMENT_ID
+            )
+                .from(COSTS)
+                .where(COSTS.AGREEMENT_ID.eq(agreementId))
+                .and(COSTS.COST_DATE.between(startDate.atStartOfDay(), endDate.atStartOfDay()))
+                .fetch().map {
+                    DailyCost(
+                        amount = it[Costs.COSTS.AMOUNT]!!.toDouble(),
+                        costCategory = InternalCostCategory.valueOf(it[Costs.COSTS.COST_CATEGORY]!!.name),
+                        date = it[Costs.COSTS.COST_DATE]!!.toLocalDate(),
+                        agreementId = agreementId
+                    )
+                }
         }
     }
 }

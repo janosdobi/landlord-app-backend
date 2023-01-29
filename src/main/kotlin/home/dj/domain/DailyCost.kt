@@ -18,5 +18,5 @@ data class DailyCost(
     val costCategory: CostCategory,
     @field:JsonProperty("date")
     val date: LocalDate,
-    val agreement: Agreement
+    val agreementId: Int
 )
