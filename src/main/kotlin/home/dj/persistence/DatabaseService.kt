@@ -1,16 +1,21 @@
 package home.dj.persistence
 
+import home.dj.domain.*
+import home.dj.jooq.model.enums.CostCategory
+import home.dj.jooq.model.tables.Agreements
 import home.dj.jooq.model.tables.UserCredentials
 import home.dj.jooq.model.tables.UserRoles
 import home.dj.jooq.model.tables.Users
-import home.dj.jooq.model.tables.references.USERS
-import home.dj.jooq.model.tables.references.USER_CREDENTIALS
-import home.dj.jooq.model.tables.references.USER_ROLES
+import home.dj.jooq.model.tables.references.*
 import io.micronaut.context.annotation.Context
 import io.micronaut.context.annotation.Requires
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.*
+import javax.persistence.NoResultException
 import home.dj.domain.UserRole as InternalUserRole
 
 @Context
@@ -42,4 +47,102 @@ class DatabaseService(
                 .where(USER_ROLES.USER_ID.eq(uid))
                 .fetch().map { InternalUserRole.valueOf(it[UserRoles.USER_ROLES.ROLE_NAME]?.name ?: "") }
         }
+
+    suspend fun fetchAgreementForLandlord(agreementId: Int, uid: Int): Agreement =
+        withContext(Dispatchers.IO) {
+            context.select(
+                Agreements.AGREEMENTS.LANDLORD_ID,
+                Agreements.AGREEMENTS.TENANT_ID,
+                Agreements.AGREEMENTS.ID,
+                Agreements.AGREEMENTS.START_DATE,
+                Agreements.AGREEMENTS.END_DATE,
+                Agreements.AGREEMENTS.MILESTONE_DAY,
+                Agreements.AGREEMENTS.RENT_AMOUNT,
+                Agreements.AGREEMENTS.RENT_CURRENCY,
+                Agreements.AGREEMENTS.UTILITY_AMOUNT,
+                Agreements.AGREEMENTS.UTILITY_CURRENCY,
+                Agreements.AGREEMENTS.MILESTONE_DAY,
+            )
+                .from(AGREEMENTS)
+                .where(Agreements.AGREEMENTS.ID.eq(agreementId))
+                .and(Agreements.AGREEMENTS.LANDLORD_ID.eq(uid))
+                .fetchOne()?.let {
+                    Agreement(
+                        id = it[Agreements.AGREEMENTS.ID]!!.toLong(),
+                        landlordId = it[Agreements.AGREEMENTS.LANDLORD_ID]!!,
+                        tenantId = it[Agreements.AGREEMENTS.TENANT_ID]!!,
+                        startDate = it[Agreements.AGREEMENTS.START_DATE]!!.toLocalDate(),
+                        endDate = it[Agreements.AGREEMENTS.END_DATE]?.toLocalDate(),
+                        rentAgreement = RentAgreement(
+                            amount = it[Agreements.AGREEMENTS.RENT_AMOUNT]!!.toDouble(),
+                            currency = Currency.getInstance(it[Agreements.AGREEMENTS.RENT_CURRENCY]!!)
+                        ),
+                        utilityAgreement = UtilityAgreement(
+                            amount = it[Agreements.AGREEMENTS.UTILITY_AMOUNT]!!.toDouble(),
+                            currency = Currency.getInstance(it[Agreements.AGREEMENTS.UTILITY_CURRENCY]!!)
+                        ),
+                        milestoneDay = it[Agreements.AGREEMENTS.MILESTONE_DAY]!!
+                    )
+                } ?: throw NoResultException("Agreement $agreementId does not exist for landlord $uid")
+        }
+
+    suspend fun persistInvoiceWithCosts(
+        utilityInvoice: UtilityInvoice,
+        dailyCosts: Sequence<DailyCost>,
+        userName: String
+    ) {
+        withContext(Dispatchers.IO) {
+            context.transaction { tx ->
+                tx.dsl().batch(
+                    dailyCosts.map { dailyCost ->
+                        tx.dsl().insertInto(COSTS)
+                            .columns(
+                                COSTS.AGREEMENT_ID,
+                                COSTS.AMOUNT,
+                                COSTS.COST_CATEGORY,
+                                COSTS.COST_DATE,
+                                COSTS.CREATED_AT,
+                                COSTS.UPDATED_AT,
+                                COSTS.CREATED_BY
+                            )
+                            .values(
+                                dailyCost.agreement.id.toInt(),
+                                BigDecimal.valueOf(dailyCost.amount),
+                                CostCategory.valueOf(dailyCost.costCategory.name),
+                                dailyCost.date.atStartOfDay(),
+                                LocalDateTime.now(),
+                                LocalDateTime.now(),
+                                userName
+                            )
+                    }.toList()
+                ).execute()
+
+                tx.dsl().insertInto(INVOICES)
+                    .columns(
+                        INVOICES.AMOUNT,
+                        INVOICES.START_DATE,
+                        INVOICES.END_DATE,
+                        INVOICES.AGREEMENT_ID,
+                        INVOICES.COST_CATEGORY,
+                        INVOICES.FILE_NAME,
+                        INVOICES.FILE_CONTENT,
+                        INVOICES.CREATED_AT,
+                        INVOICES.UPDATED_AT,
+                        INVOICES.CREATED_BY
+                    )
+                    .values(
+                        BigDecimal.valueOf(utilityInvoice.amount),
+                        utilityInvoice.startDate.atStartOfDay(),
+                        utilityInvoice.endDate.atStartOfDay(),
+                        utilityInvoice.agreementId,
+                        CostCategory.valueOf(utilityInvoice.costCategory.name),
+                        utilityInvoice.fileName,
+                        utilityInvoice.fileContent,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        userName
+                    ).execute()
+            }
+        }
+    }
 }

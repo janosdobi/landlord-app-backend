@@ -17,9 +17,9 @@ data class Agreement(
     @field:JsonProperty("end_date")
     val endDate: LocalDate? = null,
     @field:Valid
-    val tenant: User,
+    val tenantId: Int,
     @field:Valid
-    val landlord: User,
+    val landlordId: Int,
     @field:Valid
     val rentAgreement: RentAgreement,
     @field:Valid
@@ -28,7 +28,7 @@ data class Agreement(
     @field:Valid
     @field:Min(1)
     @field:Max(31)
-    val mileStoneDay: Int
+    val milestoneDay: Int
 )
 
 @Serdeable

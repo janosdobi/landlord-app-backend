@@ -11,7 +11,11 @@ import io.micronaut.http.annotation.Error
 import io.micronaut.security.authentication.AuthorizationException
 import io.micronaut.security.errors.ErrorResponse
 import io.micronaut.web.router.exceptions.UnsatisfiedRouteException
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.ErrorDataDecoderException
 import mu.KotlinLogging
+import java.lang.IllegalArgumentException
+import javax.persistence.NoResultException
 import javax.validation.ConstraintViolationException
 
 private const val INTERNAL_ERROR_MESSAGE = "Something went wrong."
@@ -30,6 +34,31 @@ class ErrorController {
         logger.warn { "Unauthorized request. ${ex.message ?: ""}" }
         return HttpResponse.unauthorized()
     }
+
+    @Error(NoResultException::class, global = true)
+    fun noResultExceptionHandler(request: HttpRequest<*>, ex: NoResultException): HttpResponse<String> {
+        logger.warn { "No result found for request ${ex.message}" }
+        return HttpResponse.badRequest<String>()
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ex.message)
+    }
+
+    @Error(IllegalArgumentException::class, global = true)
+    fun illegalArgumentExceptionHandler(request: HttpRequest<*>, ex: IllegalArgumentException): HttpResponse<String> {
+        logger.warn { "Illegal argument for request ${ex.message}" }
+        return HttpResponse.badRequest<String>()
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ex.message)
+    }
+
+    @Error(ErrorDataDecoderException::class, global = true)
+    fun dataDecoderExceptionHandler(request: HttpRequest<*>, ex: ErrorDataDecoderException): HttpResponse<String> {
+        logger.warn { "Failed to decode request data ${ex.message}" }
+        return HttpResponse.badRequest<String>()
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ex.message)
+    }
+
     @Error(global = true)
     fun onValidationError(ex: ConstraintViolationException): HttpResponse<String> {
         val errors = ex.constraintViolations.stream()
@@ -40,7 +69,7 @@ class ErrorController {
 
         logger.warn { errorMessage }
 
-        return HttpResponse.badRequest<ErrorResponse>()
+        return HttpResponse.badRequest<String>()
             .status(HttpStatus.BAD_REQUEST)
             .body(errorMessage)
     }
@@ -51,7 +80,7 @@ class ErrorController {
 
         logger.warn { "$errorMessage. Reason: ${ex.message}" }
 
-        return HttpResponse.badRequest<ErrorResponse>()
+        return HttpResponse.badRequest<String>()
             .status(HttpStatus.BAD_REQUEST)
             .body(errorMessage)
     }
@@ -60,9 +89,7 @@ class ErrorController {
     fun onRoutingException(ex: UnsatisfiedRouteException): HttpResponse<String> {
         val errorMessage = "$INVALID_REQUEST: ${ex.message}"
 
-        logger.warn { errorMessage }
-
-        return HttpResponse.badRequest<ErrorResponse>()
+        return HttpResponse.badRequest<String>()
             .status(HttpStatus.BAD_REQUEST)
             .body(errorMessage)
     }

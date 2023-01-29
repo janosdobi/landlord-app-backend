@@ -8,17 +8,15 @@ import javax.validation.Valid
 import javax.validation.constraints.Min
 
 @Serdeable
-data class AllocatedCost(
+data class DailyCost(
     @field:Min(0)
-    val id: Long,
+    val id: Long? = null,
     @field:Min(0)
     val amount: Double,
     @field:Valid
     @field:JsonProperty("cost_category")
     val costCategory: CostCategory,
-    @field:JsonProperty("start_date")
-    val startDate: LocalDate,
-    @field:JsonProperty("end_date")
-    val endDate: LocalDate,
+    @field:JsonProperty("date")
+    val date: LocalDate,
     val agreement: Agreement
 )

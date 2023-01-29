@@ -16,6 +16,8 @@ micronaut:
       jwt:
         claims-validators:
           issuer: landlord-app-backend
+  serde:
+    date-format: "yyyy-MM-dd'T'HH:mm:ss"
 netty:
   default:
     allocator:
