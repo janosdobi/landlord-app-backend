@@ -65,9 +65,8 @@ class DatabaseService(
                 .from(AGREEMENTS)
                 .where(Agreements.AGREEMENTS.ID.eq(agreementId))
                 .and(
-                    if (role == InternalUserRole.LANDLORD) Agreements.AGREEMENTS.LANDLORD_ID.eq(uid) else Agreements.AGREEMENTS.TENANT_ID.eq(
-                        uid
-                    )
+                    if (role == InternalUserRole.LANDLORD) Agreements.AGREEMENTS.LANDLORD_ID.eq(uid)
+                    else Agreements.AGREEMENTS.TENANT_ID.eq(uid)
                 )
                 .fetchOne()?.let {
                     Agreement(
@@ -152,6 +151,7 @@ class DatabaseService(
     suspend fun getCostsForPeriod(startDate: LocalDate, endDate: LocalDate, agreementId: Int): List<DailyCost> {
         return withContext(Dispatchers.IO) {
             context.select(
+                Costs.COSTS.ID,
                 Costs.COSTS.AMOUNT,
                 Costs.COSTS.COST_CATEGORY,
                 Costs.COSTS.COST_DATE,
@@ -162,6 +162,7 @@ class DatabaseService(
                 .and(COSTS.COST_DATE.between(startDate.atStartOfDay(), endDate.atStartOfDay()))
                 .fetch().map {
                     DailyCost(
+                        id = it[Costs.COSTS.AMOUNT]!!.toLong(),
                         amount = it[Costs.COSTS.AMOUNT]!!.toDouble(),
                         costCategory = InternalCostCategory.valueOf(it[Costs.COSTS.COST_CATEGORY]!!.name),
                         date = it[Costs.COSTS.COST_DATE]!!.toLocalDate(),

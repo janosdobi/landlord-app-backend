@@ -1,7 +1,8 @@
 package home.dj.controller
 
 import home.dj.domain.UserRole
-import home.dj.domain.UtilityInvoiceDTO
+import home.dj.domain.UtilityInvoice
+import home.dj.domain.request.InvoiceRequest
 import home.dj.service.AgreementService
 import home.dj.service.InvoiceService
 import io.micronaut.http.HttpResponse
@@ -25,13 +26,13 @@ class InvoiceController(
     @Post("/invoice", consumes = [MediaType.MULTIPART_FORM_DATA])
     @RolesAllowed(*["LANDLORD"])
     suspend fun submitInvoice(
-        @Valid @Body invoice: UtilityInvoiceDTO,
+        @Valid @Body invoice: InvoiceRequest,
         fileContent: ByteArray,
         auth: Authentication
     ): HttpResponse<Unit> {
         val uid = (auth.attributes["uid"] as Long).toInt()
         val agreement = agreementService.getAgreementForUser(invoice.agreementId, uid, UserRole.LANDLORD)
-        invoiceService.handleInvoice(invoice.fromDTO(fileContent), agreement, auth.name)
+        invoiceService.handleInvoice(UtilityInvoice.fromRequest(invoice, fileContent), agreement, auth.name)
         return HttpResponse.accepted()
     }
 }

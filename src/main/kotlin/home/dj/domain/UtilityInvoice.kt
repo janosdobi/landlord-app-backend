@@ -1,6 +1,7 @@
 package home.dj.domain
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import home.dj.domain.request.InvoiceRequest
 import io.micronaut.serde.annotation.Serdeable
 import java.time.LocalDate
 import javax.validation.Valid
@@ -54,31 +55,16 @@ data class UtilityInvoice(
         result = 31 * result + agreementId
         return result
     }
-}
 
-@Serdeable
-data class UtilityInvoiceDTO(
-    @field:Min(0)
-    val amount: Double,
-    @field:JsonProperty("start_date")
-    val startDate: LocalDate,
-    @field:JsonProperty("end_date")
-    val endDate: LocalDate,
-    @field:Valid
-    @field:JsonProperty("cost_category")
-    val costCategory: CostCategory,
-    @field:JsonProperty("file_name")
-    val fileName: String,
-    @field:JsonProperty("agreement_id")
-    val agreementId: Int
-) {
-    fun fromDTO(fileContent: ByteArray) = UtilityInvoice(
-        amount = this.amount,
-        startDate = this.startDate,
-        endDate = this.endDate,
-        costCategory = this.costCategory,
-        fileName = this.fileName,
-        fileContent = fileContent,
-        agreementId = this.agreementId
-    )
+    companion object {
+        fun fromRequest(request: InvoiceRequest, fileContent: ByteArray) = UtilityInvoice(
+            amount = request.amount,
+            startDate = request.startDate,
+            endDate = request.endDate,
+            costCategory = request.costCategory,
+            fileName = request.fileName,
+            fileContent = fileContent,
+            agreementId = request.agreementId
+        )
+    }
 }
