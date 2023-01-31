@@ -78,10 +78,14 @@ CREATE TABLE landlord_app.invoices
 CREATE TABLE landlord_app.costs
 (
     id            serial PRIMARY KEY,
-    cost_date          TIMESTAMP     not null,
+    start_date    TIMESTAMP     not null,
+    end_date      TIMESTAMP     not null,
     agreement_id  INT           not null,
     FOREIGN KEY (agreement_id)
         REFERENCES agreements (id),
+    invoice_id    INT           NOT NULL,
+    FOREIGN KEY (invoice_id)
+        REFERENCES invoices (id),
     amount        NUMERIC       not null,
     cost_category cost_category not null,
     created_at    TIMESTAMP     NOT NULL,
@@ -89,4 +93,5 @@ CREATE TABLE landlord_app.costs
     created_by    VARCHAR(50)   not NULL
 );
 
-CREATE INDEX cost_date_idx ON landlord_app.costs ("cost_date");
+CREATE INDEX cost_start_date_idx ON landlord_app.costs ("start_date");
+CREATE INDEX cost_end_date_idx ON landlord_app.costs ("end_date");

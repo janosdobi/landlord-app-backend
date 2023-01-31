@@ -9,6 +9,6 @@ class AgreementService(
     private val dbService: DatabaseService
 ) {
 
-    suspend fun getAgreementForUser(agreementId: Int, uid: Int, role: UserRole) =
+    suspend fun getAgreementForUser(agreementId: Long, uid: Int, role: UserRole) =
         dbService.fetchAgreementForUser(agreementId, uid, role)
 }

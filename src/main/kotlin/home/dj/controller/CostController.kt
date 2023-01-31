@@ -27,7 +27,7 @@ class CostController(
     @Get("/{agreementId}/cost")
     @RolesAllowed(*["LANDLORD", "TENANT"])
     suspend fun getCostsForPeriod(
-        @PathVariable agreementId: Int,
+        @PathVariable agreementId: Long,
         @QueryValue("s") startDateString: String,
         @QueryValue("e") endDateString: String,
         auth: Authentication

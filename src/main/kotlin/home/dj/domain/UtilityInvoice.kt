@@ -10,7 +10,7 @@ import javax.validation.constraints.Min
 @Serdeable
 data class UtilityInvoice(
     @field:Min(0)
-    val id: Long? = null,
+    val id: Long = 0,
     @field:Min(0)
     val amount: Double,
     @field:JsonProperty("start_date")
@@ -24,7 +24,7 @@ data class UtilityInvoice(
     val fileName: String,
     @field:JsonProperty("file_content")
     val fileContent: ByteArray,
-    val agreementId: Int
+    val agreementId: Long
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -52,7 +52,7 @@ data class UtilityInvoice(
         result = 31 * result + costCategory.hashCode()
         result = 31 * result + fileName.hashCode()
         result = 31 * result + fileContent.contentHashCode()
-        result = 31 * result + agreementId
+        result = 31 * result + agreementId.toInt()
         return result
     }
 

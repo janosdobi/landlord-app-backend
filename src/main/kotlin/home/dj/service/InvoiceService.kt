@@ -12,8 +12,8 @@ class InvoiceService(
 ) {
     suspend fun handleInvoice(utilityInvoice: UtilityInvoice, agreement: Agreement, userName: String) {
         validateInvoice(utilityInvoice, agreement)
-        val dailyCosts = costService.splitToDailyCosts(utilityInvoice, agreement)
-        dbService.persistInvoiceWithCosts(utilityInvoice, dailyCosts, userName)
+        val allocatedCosts = costService.allocateCosts(utilityInvoice, agreement)
+        dbService.persistInvoiceWithCosts(utilityInvoice, allocatedCosts, userName)
     }
 
     private fun validateInvoice(utilityInvoice: UtilityInvoice, agreement: Agreement) {

@@ -2,6 +2,7 @@ package home.dj.persistence
 
 import home.dj.domain.*
 import home.dj.jooq.model.enums.CostCategory
+import home.dj.jooq.model.sequences.INVOICES_ID_SEQ
 import home.dj.jooq.model.tables.*
 import home.dj.jooq.model.tables.references.*
 import io.micronaut.context.annotation.Context
@@ -47,7 +48,7 @@ class DatabaseService(
                 .fetch().map { InternalUserRole.valueOf(it[UserRoles.USER_ROLES.ROLE_NAME]?.name ?: "") }
         }
 
-    suspend fun fetchAgreementForUser(agreementId: Int, uid: Int, role: InternalUserRole): Agreement =
+    suspend fun fetchAgreementForUser(agreementId: Long, uid: Int, role: InternalUserRole): Agreement =
         withContext(Dispatchers.IO) {
             context.select(
                 Agreements.AGREEMENTS.LANDLORD_ID,
@@ -63,7 +64,7 @@ class DatabaseService(
                 Agreements.AGREEMENTS.MILESTONE_DAY,
             )
                 .from(AGREEMENTS)
-                .where(Agreements.AGREEMENTS.ID.eq(agreementId))
+                .where(Agreements.AGREEMENTS.ID.eq(agreementId.toInt()))
                 .and(
                     if (role == InternalUserRole.LANDLORD) Agreements.AGREEMENTS.LANDLORD_ID.eq(uid)
                     else Agreements.AGREEMENTS.TENANT_ID.eq(uid)
@@ -90,35 +91,11 @@ class DatabaseService(
 
     suspend fun persistInvoiceWithCosts(
         utilityInvoice: UtilityInvoice,
-        dailyCosts: Sequence<DailyCost>,
+        allocatedCosts: List<AllocatedCost>,
         userName: String
     ) {
         withContext(Dispatchers.IO) {
             context.transaction { tx ->
-                tx.dsl().batch(
-                    dailyCosts.map { dailyCost ->
-                        tx.dsl().insertInto(COSTS)
-                            .columns(
-                                COSTS.AGREEMENT_ID,
-                                COSTS.AMOUNT,
-                                COSTS.COST_CATEGORY,
-                                COSTS.COST_DATE,
-                                COSTS.CREATED_AT,
-                                COSTS.UPDATED_AT,
-                                COSTS.CREATED_BY
-                            )
-                            .values(
-                                dailyCost.agreementId,
-                                BigDecimal.valueOf(dailyCost.amount),
-                                CostCategory.valueOf(dailyCost.costCategory.name),
-                                dailyCost.date.atStartOfDay(),
-                                LocalDateTime.now(),
-                                LocalDateTime.now(),
-                                userName
-                            )
-                    }.toList()
-                ).execute()
-
                 tx.dsl().insertInto(INVOICES)
                     .columns(
                         INVOICES.AMOUNT,
@@ -136,7 +113,7 @@ class DatabaseService(
                         BigDecimal.valueOf(utilityInvoice.amount),
                         utilityInvoice.startDate.atStartOfDay(),
                         utilityInvoice.endDate.atStartOfDay(),
-                        utilityInvoice.agreementId,
+                        utilityInvoice.agreementId.toInt(),
                         CostCategory.valueOf(utilityInvoice.costCategory.name),
                         utilityInvoice.fileName,
                         utilityInvoice.fileContent,
@@ -144,29 +121,62 @@ class DatabaseService(
                         LocalDateTime.now(),
                         userName
                     ).execute()
+                val invoiceId = tx.dsl().fetchValue(INVOICES_ID_SEQ.currval())!!.toInt()
+                tx.dsl().batch(
+                    allocatedCosts.map { allocatedCost ->
+                        tx.dsl().insertInto(COSTS)
+                            .columns(
+                                COSTS.AGREEMENT_ID,
+                                COSTS.INVOICE_ID,
+                                COSTS.AMOUNT,
+                                COSTS.COST_CATEGORY,
+                                COSTS.START_DATE,
+                                COSTS.END_DATE,
+                                COSTS.CREATED_AT,
+                                COSTS.UPDATED_AT,
+                                COSTS.CREATED_BY
+                            )
+                            .values(
+                                allocatedCost.agreementId.toInt(),
+                                invoiceId,
+                                BigDecimal.valueOf(allocatedCost.amount),
+                                CostCategory.valueOf(allocatedCost.costCategory.name),
+                                allocatedCost.startDate.atStartOfDay(),
+                                allocatedCost.endDate.atStartOfDay(),
+                                LocalDateTime.now(),
+                                LocalDateTime.now(),
+                                userName
+                            )
+                    }.toList()
+                ).execute()
             }
         }
     }
 
-    suspend fun getCostsForPeriod(startDate: LocalDate, endDate: LocalDate, agreementId: Int): List<DailyCost> {
+    suspend fun getCostsForPeriod(startDate: LocalDate, endDate: LocalDate, agreementId: Long): List<AllocatedCost> {
         return withContext(Dispatchers.IO) {
             context.select(
                 Costs.COSTS.ID,
                 Costs.COSTS.AMOUNT,
                 Costs.COSTS.COST_CATEGORY,
-                Costs.COSTS.COST_DATE,
-                Costs.COSTS.AGREEMENT_ID
+                Costs.COSTS.START_DATE,
+                Costs.COSTS.END_DATE,
+                Costs.COSTS.AGREEMENT_ID,
+                Costs.COSTS.INVOICE_ID,
             )
                 .from(COSTS)
-                .where(COSTS.AGREEMENT_ID.eq(agreementId))
-                .and(COSTS.COST_DATE.between(startDate.atStartOfDay(), endDate.atStartOfDay()))
+                .where(COSTS.AGREEMENT_ID.eq(agreementId.toInt()))
+                .and(COSTS.START_DATE.greaterOrEqual(startDate.atStartOfDay()))
+                .and(COSTS.END_DATE.lessOrEqual(endDate.atStartOfDay()))
                 .fetch().map {
-                    DailyCost(
+                    AllocatedCost(
                         id = it[Costs.COSTS.AMOUNT]!!.toLong(),
                         amount = it[Costs.COSTS.AMOUNT]!!.toDouble(),
                         costCategory = InternalCostCategory.valueOf(it[Costs.COSTS.COST_CATEGORY]!!.name),
-                        date = it[Costs.COSTS.COST_DATE]!!.toLocalDate(),
-                        agreementId = agreementId
+                        startDate = it[Costs.COSTS.START_DATE]!!.toLocalDate(),
+                        endDate = it[Costs.COSTS.END_DATE]!!.toLocalDate(),
+                        agreementId = agreementId,
+                        invoiceId = it[Costs.COSTS.INVOICE_ID]!!.toLong()
                     )
                 }
         }
