@@ -1,5 +1,5 @@
 datasources:
   default:
-    url: jdbc:${DATABASE_URL}
-    username: ${PGUSER}
-    password: ${PGPASSWORD}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PWD}
