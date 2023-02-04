@@ -1,3 +1,6 @@
+micronaut:
+  server:
+    port: ${PORT}
 datasources:
   default:
     url: ${DB_URL}
