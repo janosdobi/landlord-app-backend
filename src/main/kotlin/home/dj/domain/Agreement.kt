@@ -7,6 +7,7 @@ import java.util.*
 import javax.validation.Valid
 import javax.validation.constraints.Max
 import javax.validation.constraints.Min
+import javax.validation.constraints.Size
 
 @Serdeable
 data class Agreement(
@@ -17,9 +18,9 @@ data class Agreement(
     @field:JsonProperty("end_date")
     val endDate: LocalDate? = null,
     @field:Valid
-    val tenant: User,
+    val tenantId: Int,
     @field:Valid
-    val landlord: User,
+    val landlordId: Int,
     @field:Valid
     val rentAgreement: RentAgreement,
     @field:Valid
@@ -28,19 +29,21 @@ data class Agreement(
     @field:Valid
     @field:Min(1)
     @field:Max(31)
-    val mileStoneDay: Int
+    val milestoneDay: Int
 )
 
 @Serdeable
 data class RentAgreement(
     @field:Min(0)
     val amount: Double,
-    val currency: Currency
+    @field:Size(min = 2, max = 3)
+    val currency: String
 )
 
 @Serdeable
 data class UtilityAgreement(
     @field:Min(0)
     val amount: Double,
-    val currency: Currency
+    @field:Size(min = 2, max = 3)
+    val currency: String
 )

@@ -1,24 +1,25 @@
-package home.dj.domain
+package home.dj.domain.request
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import home.dj.domain.CostCategory
 import io.micronaut.serde.annotation.Serdeable
 import java.time.LocalDate
 import javax.validation.Valid
 import javax.validation.constraints.Min
 
 @Serdeable
-data class AllocatedCost(
-    @field:Min(0)
-    val id: Long = 0,
+data class InvoiceRequest(
     @field:Min(0)
     val amount: Double,
-    @field:Valid
-    @field:JsonProperty("cost_category")
-    val costCategory: CostCategory,
     @field:JsonProperty("start_date")
     val startDate: LocalDate,
     @field:JsonProperty("end_date")
     val endDate: LocalDate,
-    val agreementId: Long,
-    var invoiceId: Long? = null
+    @field:Valid
+    @field:JsonProperty("cost_category")
+    val costCategory: CostCategory,
+    @field:JsonProperty("file_name")
+    val fileName: String,
+    @field:JsonProperty("agreement_id")
+    val agreementId: Long
 )

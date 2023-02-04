@@ -10,6 +10,14 @@ plugins {
     id("nu.studer.jooq") version "5.2.1"
 }
 
+allOpen {
+    annotations(
+        "io.micronaut.aop.Around",
+        "io.micronaut.http.annotation.Controller",
+        "jakarta.inject.Singleton"
+    )
+}
+
 val jooqPropertiesFile = rootProject.file("jooq.properties")
 val jooqProperties = Properties()
 try {
@@ -70,8 +78,11 @@ configurations.all {
 application {
     mainClass.set("home.dj.ApplicationKt")
 }
-java {
-    sourceCompatibility = JavaVersion.toVersion("17")
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of("17"))
+    }
 }
 
 tasks {
@@ -126,7 +137,7 @@ jooq {
                     }
                     target.apply {
                         packageName = "home.dj.jooq.model"
-                        directory = "build/generated/src/main/kotlin"
+                        directory = "$rootDir/generated/src/main/kotlin"
                     }
                 }
             }
@@ -136,5 +147,5 @@ jooq {
 
 sourceSets {
     val main by getting { }
-    main.java.srcDir("$buildDir/generated/src/main/kotlin")
+    main.java.srcDir("$rootDir/generated/src/main/kotlin")
 }
