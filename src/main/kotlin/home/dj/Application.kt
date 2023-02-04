@@ -17,7 +17,7 @@ fun main(args: Array<String>) {
     Micronaut.build()
         .args(*args)
         .banner(false)
-        .environments("local")
+        .environments(System.getenv("LANDLORD_ENV") ?: "local")
         .start()
 }
 

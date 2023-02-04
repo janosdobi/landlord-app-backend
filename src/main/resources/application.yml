@@ -24,9 +24,6 @@ netty:
       max-order: 3
 datasources:
   default:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PWD}
     driverClassName: org.postgresql.Driver
     maximum-pool-size: 10
 jooq:
