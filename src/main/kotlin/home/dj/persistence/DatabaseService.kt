@@ -6,7 +6,7 @@ import home.dj.jooq.model.sequences.INVOICES_ID_SEQ
 import home.dj.jooq.model.tables.*
 import home.dj.jooq.model.tables.references.*
 import jakarta.inject.Singleton
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import java.math.BigDecimal
@@ -31,10 +31,11 @@ interface DatabaseService {
 
 @Singleton
 class DefaultDatabaseService(
-    private val context: DSLContext
+    private val context: DSLContext,
+    private val dispatcher: CoroutineDispatcher
 ) : DatabaseService {
     override suspend fun getCredentialAndIdForUser(userName: String): Pair<String, Int> =
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             context.select(
                 UserCredentials.USER_CREDENTIALS.CREDENTIAL,
                 Users.USERS.ID
@@ -49,7 +50,7 @@ class DefaultDatabaseService(
         }
 
     override suspend fun getUserRoles(uid: Int): List<InternalUserRole> =
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             context.select(
                 UserRoles.USER_ROLES.ROLE_NAME
             )
@@ -59,7 +60,7 @@ class DefaultDatabaseService(
         }
 
     override suspend fun fetchAgreementForUser(agreementId: Long, uid: Int, role: InternalUserRole): Agreement =
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             context.select(
                 Agreements.AGREEMENTS.LANDLORD_ID,
                 Agreements.AGREEMENTS.TENANT_ID,
@@ -104,7 +105,7 @@ class DefaultDatabaseService(
         allocatedCosts: List<AllocatedCost>,
         userName: String
     ) {
-        withContext(Dispatchers.IO) {
+        withContext(dispatcher) {
             context.transaction { tx ->
                 tx.dsl().insertInto(INVOICES)
                     .columns(
@@ -168,7 +169,7 @@ class DefaultDatabaseService(
         endDate: LocalDate,
         agreementId: Long
     ): List<AllocatedCost> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             context.select(
                 Costs.COSTS.ID,
                 Costs.COSTS.AMOUNT,
