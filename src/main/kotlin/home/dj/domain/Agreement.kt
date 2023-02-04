@@ -7,6 +7,7 @@ import java.util.*
 import javax.validation.Valid
 import javax.validation.constraints.Max
 import javax.validation.constraints.Min
+import javax.validation.constraints.Size
 
 @Serdeable
 data class Agreement(
@@ -35,12 +36,14 @@ data class Agreement(
 data class RentAgreement(
     @field:Min(0)
     val amount: Double,
-    val currency: Currency
+    @field:Size(min = 2, max = 3)
+    val currency: String
 )
 
 @Serdeable
 data class UtilityAgreement(
     @field:Min(0)
     val amount: Double,
-    val currency: Currency
+    @field:Size(min = 2, max = 3)
+    val currency: String
 )

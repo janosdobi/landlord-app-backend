@@ -4,6 +4,7 @@ import home.dj.domain.AggregatedCosts
 import home.dj.domain.UserRole
 import home.dj.domain.UserRole.LANDLORD
 import home.dj.domain.UserRole.TENANT
+import home.dj.domain.response.CostsResponse
 import home.dj.service.AgreementService
 import home.dj.service.CostService
 import io.micronaut.http.HttpResponse
@@ -31,11 +32,10 @@ class CostController(
         @QueryValue("s") startDateString: String,
         @QueryValue("e") endDateString: String,
         auth: Authentication
-    ): HttpResponse<AggregatedCosts> {
+    ): HttpResponse<CostsResponse> {
         val uid = (auth.attributes["uid"] as Long).toInt()
         val role = auth.roles.map { UserRole.valueOf(it) }.first { it == LANDLORD || it == TENANT }
         val agreement = agreementService.getAgreementForUser(agreementId, uid, role)
-
         return HttpResponse.ok(
             costService.getCostsForPeriod(
                 LocalDate.parse(startDateString),

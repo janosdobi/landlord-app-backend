@@ -78,11 +78,11 @@ class DatabaseService(
                         endDate = it[Agreements.AGREEMENTS.END_DATE]?.toLocalDate(),
                         rentAgreement = RentAgreement(
                             amount = it[Agreements.AGREEMENTS.RENT_AMOUNT]!!.toDouble(),
-                            currency = Currency.getInstance(it[Agreements.AGREEMENTS.RENT_CURRENCY]!!)
+                            currency = it[Agreements.AGREEMENTS.RENT_CURRENCY]!!
                         ),
                         utilityAgreement = UtilityAgreement(
                             amount = it[Agreements.AGREEMENTS.UTILITY_AMOUNT]!!.toDouble(),
-                            currency = Currency.getInstance(it[Agreements.AGREEMENTS.UTILITY_CURRENCY]!!)
+                            currency = it[Agreements.AGREEMENTS.UTILITY_CURRENCY]!!
                         ),
                         milestoneDay = it[Agreements.AGREEMENTS.MILESTONE_DAY]!!
                     )
@@ -115,8 +115,8 @@ class DatabaseService(
                         utilityInvoice.endDate.atStartOfDay(),
                         utilityInvoice.agreementId.toInt(),
                         CostCategory.valueOf(utilityInvoice.costCategory.name),
-                        utilityInvoice.fileName,
-                        utilityInvoice.fileContent,
+                        utilityInvoice.invoiceDocument.fileName,
+                        utilityInvoice.invoiceDocument.fileContent,
                         LocalDateTime.now(),
                         LocalDateTime.now(),
                         userName
@@ -168,6 +168,7 @@ class DatabaseService(
                 .where(COSTS.AGREEMENT_ID.eq(agreementId.toInt()))
                 .and(COSTS.START_DATE.greaterOrEqual(startDate.atStartOfDay()))
                 .and(COSTS.END_DATE.lessOrEqual(endDate.atStartOfDay()))
+                .orderBy(COSTS.END_DATE)
                 .fetch().map {
                     AllocatedCost(
                         id = it[Costs.COSTS.AMOUNT]!!.toLong(),
