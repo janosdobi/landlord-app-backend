@@ -3,12 +3,12 @@ package home.dj.service
 import home.dj.domain.*
 import home.dj.domain.response.CostsResponse
 import home.dj.persistence.DatabaseService
-import io.micronaut.context.annotation.Context
+import jakarta.inject.Singleton
 import mu.KotlinLogging
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-@Context
+@Singleton
 class CostService(
     private val dbService: DatabaseService
 ) {
@@ -65,7 +65,10 @@ class CostService(
         var firstDay = aggregatedStart
         var lastDay = aggregatedStart.plusMonths(1).minusDays(1)
 
-        while ((lastDay.isBefore(aggregatedEnd) || lastDay.isEqual(aggregatedEnd)) && costs.last().endDate.isAfter(firstDay)) {
+        while ((lastDay.isBefore(aggregatedEnd) || lastDay.isEqual(aggregatedEnd)) && costs.last().endDate.isAfter(
+                firstDay
+            )
+        ) {
             val costsForPeriod = costs.filter {
                 (it.startDate.isAfter(firstDay) || it.startDate.isEqual(firstDay))
                         && (it.endDate.isBefore(lastDay)) || it.endDate.isEqual(lastDay)

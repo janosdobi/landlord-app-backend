@@ -137,7 +137,7 @@ jooq {
                     }
                     target.apply {
                         packageName = "home.dj.jooq.model"
-                        directory = "build/generated/src/main/kotlin"
+                        directory = "$rootDir/generated/src/main/kotlin"
                     }
                 }
             }
@@ -147,5 +147,5 @@ jooq {
 
 sourceSets {
     val main by getting { }
-    main.java.srcDir("$buildDir/generated/src/main/kotlin")
+    main.java.srcDir("$rootDir/generated/src/main/kotlin")
 }

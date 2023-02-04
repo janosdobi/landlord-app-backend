@@ -5,25 +5,35 @@ import home.dj.jooq.model.enums.CostCategory
 import home.dj.jooq.model.sequences.INVOICES_ID_SEQ
 import home.dj.jooq.model.tables.*
 import home.dj.jooq.model.tables.references.*
-import io.micronaut.context.annotation.Context
-import io.micronaut.context.annotation.Requires
+import jakarta.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
 import javax.persistence.NoResultException
 import home.dj.domain.CostCategory as InternalCostCategory
 import home.dj.domain.UserRole as InternalUserRole
 
-@Context
-@Requires(notEnv = ["test"])
-class DatabaseService(
+interface DatabaseService {
+    suspend fun getCredentialAndIdForUser(userName: String): Pair<String, Int>
+    suspend fun getUserRoles(uid: Int): List<InternalUserRole>
+    suspend fun fetchAgreementForUser(agreementId: Long, uid: Int, role: InternalUserRole): Agreement
+    suspend fun persistInvoiceWithCosts(
+        utilityInvoice: UtilityInvoice,
+        allocatedCosts: List<AllocatedCost>,
+        userName: String
+    )
+
+    suspend fun getCostsForPeriod(startDate: LocalDate, endDate: LocalDate, agreementId: Long): List<AllocatedCost>
+}
+
+@Singleton
+class DefaultDatabaseService(
     private val context: DSLContext
-) {
-    suspend fun getCredentialAndIdForUser(userName: String): Pair<String, Int> =
+) : DatabaseService {
+    override suspend fun getCredentialAndIdForUser(userName: String): Pair<String, Int> =
         withContext(Dispatchers.IO) {
             context.select(
                 UserCredentials.USER_CREDENTIALS.CREDENTIAL,
@@ -38,7 +48,7 @@ class DatabaseService(
                 } ?: ("" to -1)
         }
 
-    suspend fun getUserRoles(uid: Int): List<InternalUserRole> =
+    override suspend fun getUserRoles(uid: Int): List<InternalUserRole> =
         withContext(Dispatchers.IO) {
             context.select(
                 UserRoles.USER_ROLES.ROLE_NAME
@@ -48,7 +58,7 @@ class DatabaseService(
                 .fetch().map { InternalUserRole.valueOf(it[UserRoles.USER_ROLES.ROLE_NAME]?.name ?: "") }
         }
 
-    suspend fun fetchAgreementForUser(agreementId: Long, uid: Int, role: InternalUserRole): Agreement =
+    override suspend fun fetchAgreementForUser(agreementId: Long, uid: Int, role: InternalUserRole): Agreement =
         withContext(Dispatchers.IO) {
             context.select(
                 Agreements.AGREEMENTS.LANDLORD_ID,
@@ -89,7 +99,7 @@ class DatabaseService(
                 } ?: throw NoResultException("Agreement $agreementId does not exist for landlord $uid")
         }
 
-    suspend fun persistInvoiceWithCosts(
+    override suspend fun persistInvoiceWithCosts(
         utilityInvoice: UtilityInvoice,
         allocatedCosts: List<AllocatedCost>,
         userName: String
@@ -153,7 +163,11 @@ class DatabaseService(
         }
     }
 
-    suspend fun getCostsForPeriod(startDate: LocalDate, endDate: LocalDate, agreementId: Long): List<AllocatedCost> {
+    override suspend fun getCostsForPeriod(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        agreementId: Long
+    ): List<AllocatedCost> {
         return withContext(Dispatchers.IO) {
             context.select(
                 Costs.COSTS.ID,

@@ -1,0 +1,22 @@
+micronaut:
+  application:
+    name: landlordAppBackend
+  server:
+    port: 8091
+    context-path: /api
+  security:
+    ip-patterns:
+      - "0.0.0.0"
+    authentication: bearer
+    token.jwt.signatures.secret.generator:
+      secret: "test-secret"
+      base64: true
+      jws-algorithm: HS384
+    token:
+      jwt:
+        claims-validators:
+          issuer: landlord-app-backend
+  serde:
+    date-format: "yyyy-MM-dd"
+landlord.app:
+  hash.key: "hash-key"
