@@ -8,13 +8,12 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Error
+import io.micronaut.security.authentication.AuthenticationException
 import io.micronaut.security.authentication.AuthorizationException
 import io.micronaut.security.errors.ErrorResponse
 import io.micronaut.web.router.exceptions.UnsatisfiedRouteException
-import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder.ErrorDataDecoderException
 import mu.KotlinLogging
-import java.lang.IllegalArgumentException
 import javax.persistence.NoResultException
 import javax.validation.ConstraintViolationException
 
@@ -33,6 +32,12 @@ class ErrorController {
     fun authorizationExceptionHandler(request: HttpRequest<*>, ex: AuthorizationException): HttpResponse<Void> {
         logger.warn { "Unauthorized request. ${ex.message ?: ""}" }
         return HttpResponse.unauthorized()
+    }
+
+    @Error(AuthenticationException::class, global = true)
+    fun authenticationExceptionHandler(request: HttpRequest<*>, ex: AuthenticationException): HttpResponse<Void> {
+        logger.warn { "Authentication failed. ${ex.message ?: ""}" }
+        return HttpResponse.status(HttpStatus.FORBIDDEN)
     }
 
     @Error(NoResultException::class, global = true)
