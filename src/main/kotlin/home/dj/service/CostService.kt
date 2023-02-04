@@ -65,9 +65,8 @@ class CostService(
         var firstDay = aggregatedStart
         var lastDay = aggregatedStart.plusMonths(1).minusDays(1)
 
-        while ((lastDay.isBefore(aggregatedEnd) || lastDay.isEqual(aggregatedEnd)) && costs.last().endDate.isAfter(
-                firstDay
-            )
+        while ((lastDay.isBefore(aggregatedEnd) || lastDay.isEqual(aggregatedEnd))
+            && costs.isNotEmpty() && costs.last().endDate.isAfter(firstDay)
         ) {
             val costsForPeriod = costs.filter {
                 (it.startDate.isAfter(firstDay) || it.startDate.isEqual(firstDay))
