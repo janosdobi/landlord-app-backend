@@ -3,8 +3,8 @@ micronaut:
     port: ${PORT}
   security:
     ip-patterns:
-      - 86.88.150.144
-      - 2a02:a44a:4af2:1:4c05:fde3:d799:7c3b
+      - ${NL_IPV4}
+      - ${NL_IPV6}
 datasources:
   default:
     url: ${DB_URL}
