@@ -30,3 +30,6 @@ jooq:
       sql-dialect: 'POSTGRES'
 landlord.app:
   hash.key: ${HASH_KEY}
+logger.levels:
+  root: INFO
+  io.micronaut.security.rules: DEBUG
