@@ -1,10 +1,6 @@
 micronaut:
   server:
     port: ${PORT}
-  security:
-    ip-patterns:
-      - ${NL_IPV4}
-      - ${NL_IPV6}
 datasources:
   default:
     url: ${DB_URL}
