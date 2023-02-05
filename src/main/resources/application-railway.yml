@@ -1,6 +1,9 @@
 micronaut:
   server:
     port: ${PORT}
+  security:
+    ip-patterns:
+      - "86.88.150.144"
 datasources:
   default:
     url: ${DB_URL}
