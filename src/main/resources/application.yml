@@ -5,8 +5,6 @@ micronaut:
     port: 8091
     context-path: /api
   security:
-    ip-patterns:
-      - "0.0.0.0"
     authentication: bearer
     token.jwt.signatures.secret.generator:
       secret: ${JWT_GENERATOR_SIGNATURE_SECRET}

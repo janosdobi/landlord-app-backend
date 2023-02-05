@@ -3,3 +3,8 @@ datasources:
     url: jdbc:postgresql://localhost:5432/landlord-db
     username: ${DB_USER}
     password: ${DB_PWD}
+micronaut:
+  security:
+    ip-patterns:
+      - 127.0.0.1
+      - 0:0:0:0:0:0:0:1
