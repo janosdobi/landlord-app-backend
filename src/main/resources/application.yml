@@ -33,4 +33,3 @@ landlord.app:
   api.key: ${API_KEY}
 logger.levels:
   root: INFO
-  io.micronaut.security.rules: DEBUG
