@@ -16,6 +16,11 @@ micronaut:
           issuer: landlord-app-backend
   serde:
     date-format: "yyyy-MM-dd"
+  router:
+    static-resources:
+      default:
+        paths:
+          - classpath:public
 netty:
   default:
     allocator:
