@@ -35,6 +35,5 @@ jooq:
       sql-dialect: 'POSTGRES'
 landlord.app:
   hash.key: ${HASH_KEY}
-  api.key: ${API_KEY}
 logger.levels:
   root: INFO

@@ -1,6 +1,5 @@
 package home.dj.controller
 
-import home.dj.domain.AggregatedCosts
 import home.dj.domain.UserRole
 import home.dj.domain.UserRole.LANDLORD
 import home.dj.domain.UserRole.TENANT
