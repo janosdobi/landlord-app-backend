@@ -16,6 +16,11 @@ micronaut:
           issuer: landlord-app-backend
   serde:
     date-format: "yyyy-MM-dd"
+  router:
+    static-resources:
+      default:
+        paths:
+          - classpath:public
 netty:
   default:
     allocator:
@@ -30,6 +35,5 @@ jooq:
       sql-dialect: 'POSTGRES'
 landlord.app:
   hash.key: ${HASH_KEY}
-  api.key: ${API_KEY}
 logger.levels:
   root: INFO

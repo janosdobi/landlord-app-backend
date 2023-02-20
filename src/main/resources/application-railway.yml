@@ -1,6 +1,14 @@
 micronaut:
   server:
     port: ${PORT}
+    cors:
+      enabled: true
+      configurations.all:
+        allowedOrigins:
+          - ^http(|s):\/\/www\.apartment-manager\.up\.railway\.app\.com$
+        allowedMethods:
+          - GET
+          - POST
 datasources:
   default:
     url: ${DB_URL}
